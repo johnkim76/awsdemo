@@ -5,6 +5,37 @@ from bottle import route, run, get, static_file, DEBUG
 import os,json
 
 
+def get_db_user():
+    ret = os.environ.get('POSTGRES_USER')
+    if ret == None:
+        ret = os.environ.get('POSTGRESQL_USER')
+    return ret
+
+def get_db_password():
+    ret = os.environ.get('POSTGRES_PASSWORD')
+    if ret == None:
+        ret = os.environ.get('POSTGRESQL_PASSWORD')
+    return ret
+
+def get_db_host():
+    ret = os.environ.get('POSTGRES_HOST')
+    if ret == None:
+        ret = os.environ.get('POSTGRESQL_HOST')
+    return ret
+
+def get_db_name():
+    ret = os.environ.get('POSTGRES_DB')
+    if ret == None:
+        ret = os.environ.get('POSTGRESQL_DATABASE')
+    return ret
+
+get_db_param = {
+    'user' : get_db_user,
+    'password' : get_db_password,
+    'host' : get_db_host,
+    'name' : get_db_name,
+}
+
 
 @route('/')
 def index():
@@ -16,10 +47,10 @@ def index():
 def getzips():
     results = []
     try:
-        conn = psycopg2.connect(database=os.environ.get('POSTGRES_DB'), user=os.environ.get('POSTGRES_USER'),
-                                host=os.environ.get('POSTGRES_HOST'), password=os.environ.get('POSTGRES_PASSWORD'))
+        conn = psycopg2.connect(database=get_db_param['name'](), user=get_db_param['user'](),
+                                host=get_db_param['host'](), password=get_db_param['password']())
     except:
-        print("couldn't make connection" + os.environ.get('POSTGRES_HOST'))
+        print("couldn't make connection" + get_db_param['host']())
 
     cur = conn.cursor()
     cur.execute("""select zipcode, count, ST_AsText(the_geom) from zipcodes""")
@@ -42,10 +73,10 @@ def getzips():
 def getairports():
     results = []
     try:
-        conn = psycopg2.connect(database=os.environ.get('POSTGRES_DB'), user=os.environ.get('POSTGRES_USER'),
-                                host=os.environ.get('POSTGRES_HOST'), password=os.environ.get('POSTGRES_PASSWORD'))
+        conn = psycopg2.connect(database=get_db_param['name'](), user=get_db_param['user'](),
+                                host=get_db_param['host'](), password=get_db_param['password']())
     except:
-        print(os.environ.get('POSTGRES_HOST'))
+        print(get_db_param['host']())
 
     cur = conn.cursor()
     cur.execute("""select name, passengers, ST_AsText(the_geom) from airports""")
@@ -71,10 +102,10 @@ def getairports():
 @get('/db')
 def dbexample():
     try:
-        conn = psycopg2.connect(database=os.environ.get('POSTGRES_DB'), user=os.environ.get('POSTGRES_USER'),
-                            host=os.environ.get('POSTGRES_HOST'), password=os.environ.get('POSTGRES_PASSWORD'))
+        conn = psycopg2.connect(database=get_db_param['name'](), user=get_db_param['user'](),
+                            host=get_db_param['host'](), password=get_db_param['password']())
     except:
-        print(os.environ.get('POSTGRES_HOST'))
+        print(get_db_param['host']())
 
     cur = conn.cursor()
     # cur.execute("""select parkid, name, ST_AsText(the_geom) from parkpoints limit 10""")
